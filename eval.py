@@ -1,32 +1,32 @@
-import time
+import os
+import json
+import sys
+from dotenv import load_dotenv
 
-dataset = [
-    {"input": "What is 2+2?",        "expected": "4"},
-    {"input": "Capital of France?",  "expected": "Paris"},
-    {"input": "Color of sky?",       "expected": "Blue"},
-]
+load_dotenv()  # reads .env locally; in GitHub Actions, env vars are injected directly
 
-def my_task(item):
-    # simulate LLM call
-    answers = {
-        "What is 2+2?":       "4",
-        "Capital of France?": "Paris",
-        "Color of sky?":      "Blue",
-    }
-    time.sleep(0.5)  # simulate latency
-    return answers.get(item["input"], "unknown")
+# --- read secrets ---
+api_key    = os.getenv("MY_API_KEY")
+model_name = os.getenv("MODEL_NAME")
 
-def evaluate(output, expected):
-    return output.strip().lower() == expected.strip().lower()
+# --- read payload passed from workflow ---
+payload_str = os.getenv("EVAL_PAYLOAD", "{}")
+payload     = json.loads(payload_str)
 
-print("Starting eval run...\n")
+dataset_name = payload.get("dataset_name", "default-dataset")
+run_name     = payload.get("run_name",     "test-run")
 
-passed = 0
-for item in dataset:
-    output = my_task(item)
-    correct = evaluate(output, item["expected"])
-    passed += correct
-    status = "✅ PASS" if correct else "❌ FAIL"
-    print(f"{status} | input: {item['input']} | output: {output}")
+# --- validation ---
+if not api_key:
+    print("❌ ERROR: MY_API_KEY is not set")
+    sys.exit(1)
 
-print(f"\nResult: {passed}/{len(dataset)} passed")
+# --- simulate eval ---
+print(f"✅ Secrets loaded")
+print(f"   API Key   : {api_key[:4]}****")   # never print full secret
+print(f"   Model     : {model_name}")
+print(f"\n📦 Payload received")
+print(f"   Dataset   : {dataset_name}")
+print(f"   Run name  : {run_name}")
+print(f"\n🚀 Running eval [{run_name}] on dataset [{dataset_name}] using [{model_name}]...")
+print(f"✅ Done.")

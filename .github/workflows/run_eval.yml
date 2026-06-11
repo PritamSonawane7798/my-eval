@@ -2,6 +2,15 @@ name: Run Eval
 
 on:
   workflow_dispatch:
+    inputs:
+      dataset_name:
+        description: "Dataset to run eval on"
+        required: true
+        default: "my-dataset"
+      run_name:
+        description: "Name for this eval run"
+        required: true
+        default: "test-run-v1"
 
 jobs:
   eval:
@@ -14,4 +23,17 @@ jobs:
         with:
           python-version: "3.11"
 
+      - run: pip install -r requirements.txt
+
       - run: python eval.py
+        env:
+          # secrets from GitHub → Settings → Secrets
+          MY_API_KEY: ${{ secrets.MY_API_KEY }}
+          MODEL_NAME: ${{ secrets.MODEL_NAME }}
+
+          # payload built from workflow_dispatch inputs
+          EVAL_PAYLOAD: >
+            {
+              "dataset_name": "${{ github.event.inputs.dataset_name }}",
+              "run_name":     "${{ github.event.inputs.run_name }}"
+            }
